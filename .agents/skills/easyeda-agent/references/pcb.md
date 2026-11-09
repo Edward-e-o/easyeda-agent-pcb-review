@@ -11,6 +11,9 @@ list. 工程写入只允许参数化数据经 Cobra 子命令、typed action 或
 > each with a data-detectable check). This operational skill **links** to it — single
 > source, never copy the rules here.
 
+改板和最终审查时逐项回填[泪滴与八项布线审查](pcb-routing.md#泪滴与八项布线审查)的适用性及证据；
+离线快照差异检查不覆盖这些布线质量项，不能拿 `review-delta` 的零变化代签。
+
 > **本文导航**:块的 PCB 约束(先查)· 坐标系与模型 · Workflow · Actions(Navigation / Board /
 > View / Read·inspect / Routing / Copper pour / Keep-out regions / Filled region / Sch→PCB sync /
 > Layout adjust)· Board outline(板框)· Auto-layout · Guardrails。
@@ -355,3 +358,9 @@ PCB 的 `--center` 仍不允许补丁包含 x/y/rotation。
 `bindingVerified:false` 或 `partial:true` 表示绑定未验证，CLI 非零退出并保留已创建 ID。
 `bindingVerified` 只核对明确请求的身份字段，不代表焊盘网络已验收；未请求的字段只报告回读值。
 不要因回包失败重复放置，先核对该 ID。
+
+## 改板前后对账（离线）
+
+通孔改焊盘、替换连接器或清理走线前后分别保留完整PCB dump，可用`pcb review-delta --before before.json --after after.json --strict`复核器件/焊盘网络、过孔增删及删孔位置保留的阻焊图元。报告只输出差异与缺口，减少反复粘贴整板JSON；需要定位时回到原始快照。复制板之间比较须显式`--allow-document-change`。
+
+`retained-mask-at-removed-via`是人工复核候选，不证明有异网露铜，更不授权自动删开窗；表面焊线盘可能有意保留开窗。应另查新铜、正反阻焊、锡膏及钻孔制造文件。曲线图元或缺测会标为incomplete，不能因DRC为0或两份网络数量相同省略制造检查。原始数据、Gerber与硬件验证各自保留。

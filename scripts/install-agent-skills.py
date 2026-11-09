@@ -109,7 +109,8 @@ def install(plan: list[tuple[Path, Path, bool]], dry_run: bool) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     destination = parser.add_mutually_exclusive_group()
-    destination.add_argument("--target", choices=("agents", "codex", "claude", "all"), default="agents")
+    destination.add_argument("--target", choices=("agents", "codex", "claude", "dsh", "all"), default="agents",
+                             help="all keeps the agents/codex/claude targets; select dsh explicitly")
     destination.add_argument("--skills-dir", type=Path, help="custom user-level Skill discovery directory")
     parser.add_argument("--dry-run", action="store_true", help="validate and print destinations without writing")
     parser.add_argument("--scope", choices=("repo", "design", "all"), default="repo",

@@ -139,3 +139,9 @@ PCB 保持在 `pcb` 域。CLI → daemon → connector 是唯一运行链路，�
 新增动作必须在 `internal/protocol/actions.go` 的同一条注册中声明 `Access`；目录覆盖测试会拒绝零值、未知类别及与 `mutates` 冲突的读写声明。消费者遇到未知版本、字段或矛盾声明应拒绝；旧 CLI 完全没有权限元数据时，可使用宿主冻结的旧白名单，但不得凭名称通配符开放新动作。权限声明改变后，已展示的确认必须作废并重新确认。
 
 CLI 目录只描述本二进制能力，不证明运行 daemon/连接器同版本、不代表普通人工门禁已批准，也不替代现场动作与保存重载证据。
+
+## 离线PCB变更复核
+
+`pcb review-delta --before before.json --after after.json [--strict] [--allow-document-change]`读取`pcb dump --include-copper`产物，不连接或修改EDA。默认输出JSON；`--strict`遇变化或缺测非零退出，仍输出可审查结果。跨项目/文档比较默认标记incomplete，有意比较复制板时才显式放行身份差异。
+
+检查范围是器件增删、按uniqueId和padNumber对账的焊盘增删/网络变化、过孔增删/网络变化，以及未修改的顶/底阻焊填充对已删除过孔中心的包含关系。只对直线多边形执行真实轮廓包含，不用包围盒冒充几何证明；曲线或不可解析数据标记incomplete。`notChecked`列出未覆盖的器件姿态、走线/孔几何、真实铜连通、Gerber露铜、DRC及硬件行为。不能用本命令补签这些检查。

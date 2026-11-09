@@ -77,6 +77,60 @@ Git 分发入口检查；当前包内容以根 `package.json` 的 `files` 清单
 
 ## 团队/他人接入（兜底：一键脚本）
 
+### Windows 源码副本接入与回退
+
+本节是**已有 bundle 的替代路径**，用于本地开发源码；不是首次支持 DSH，也不替代原有
+`install.ps1` 的 CLI 安装功能。不要把下面步骤与同一 profile 的 `easyeda-agent-dsh` bundle
+同时使用。公开 Git ref 未包含本地改动时，不能声称上游安装命令会安装这些改动。
+
+已有 Node 20.17+、Python 3 和单独安装的 CLI 后，在源码根目录执行。将占位路径换为自己电脑
+上已存在的绝对路径；不要把它们写入可公开的项目配置：
+
+```powershell
+npm ci --ignore-scripts --no-audit --no-fund
+python scripts/install-agent-skills.py --target dsh --scope design --dry-run
+python scripts/install-agent-skills.py --target dsh --scope design
+node scripts/dsh-setup.mjs --profile desktop --easyeda-bin 'C:\Tools\easyeda.exe'
+# 检查 JSON 的 target、preview、runtime 和 skill 后再应用：
+node scripts/dsh-setup.mjs --profile desktop --easyeda-bin 'C:\Tools\easyeda.exe' --apply
+```
+
+`--dsh-home` 指定独立 DSH_HOME，`--source` 指定源码副本，`--node-bin` 固定运行 MCP 的 Node。
+不修改 PATH，不下载软件，不启动 daemon，不重启 DSH，不修改全局 AGENTS。Skill 复用既有
+链接安装器：`dsh` 是显式目标，`all` 保持原行为；目标已有目录或指向其他源码的链接时保留并报错。
+Windows 建立符号链接可能需要系统已有的相应权限；失败时不能称为已安装，不自动改权限或删目录。
+
+MCP 助手默认只读预览，检查 CLI 版本与离线 action 目录、Node 版本、SDK 解析及目标 profile。
+只在现存 `cordis.patch.yml` 中增加独立标记块，不接管未标记的同名 id/server，不额外注册 Skill
+provider。检测到 profile 的 EasyEDA bundle 时拒绝混装；`skill.candidates` 同时报告用户 `.dsh`
+与共享 `.agents` 根的已存在副本及不可读链接，遇旧副本打印警告，保留原文件。项目根、间接
+bundle 或运行时其他来源仍须通过 DSH 合并配置核查，不能因本地扫描没发现就宣称无重复。
+
+应用前将原文件逐字节备份到该 profile 的 `.easyeda-agent/backups/<id>/`，回执给出 `receipt`。
+重复应用不改变文件或新建备份；非标记区（包括其他插件、注释及 `!!js`）保留。回退命令：
+
+```powershell
+node scripts/dsh-setup.mjs --restore 'C:\DSH\profiles\desktop\.easyeda-agent\backups\<id>\receipt.json'
+```
+
+回退先比对原备份和当前配置散列；安装后有其他编辑则拒绝覆盖，需结合备份人工合并。
+备份含原 profile 配置，可能有凭据，**仅留本机，不能提交 Git 或随公开包上传**。
+文件替换失败保留错误和备份；不通过删除原配置或放宽权限来重试。写前比较可拦截已发生的
+编辑，但最后比较与原子替换之间仍有竞态窗口；安装时应避免其他进程同时编辑该配置。
+
+验收分开记录，前一层不能代替后一层：
+
+1. **预检**：预览无文件变化、CLI/Node/目录可用；`skill.matchesCheckout` 表示链接目标，不能证明模型已加载。
+2. **离线工具**：运行 `npm run test:dsh`（包含真实 npm 包的 MCP 握手回归）及定向差异复核；配置预览不是 MCP 已握手。
+3. **DSH 加载**：用该 DSH 版本支持的方式回读合并配置，确认 MCP 唯一；在会话实际发现工具、调用一次只读目录，并通过 Skill 工具读到正文。需要重启时由用户安排，不强停正在运行的会话。若 desktop 的 `--dump-config` 被 Electron 独占拒绝，合并配置层记未验证；工具未出现时检查 DSH 的进程日志，不因配置文件存在而认定服务已启动。
+4. **EDA 现场**：`easyeda_health` 应有目标窗口与兼容性证据，按明确文档调用只读接口。缺 daemon/连接器则标未验证。真实写入还需专用测试工程、保存重载、新回读及 DRC，不在配置安装时改用户板子。
+
+`pcb review-delta` 当前是纯离线 **CLI 子命令，不是 MCP typed action**；不能用
+`easyeda_pcb` 虚构 `pcb.review_delta`。有本机命令工具的 DSH 可通过上述明确 CLI 路径运行；
+仅支持 MCP 的客户端目前不能直接调用它，需要另外提供受限离线工具，不能绕到任意命令执行。
+
+这条源码接入路径没有赋予额外工程写入权限。仅从运行日志归纳失误，不照抄私有聊天；来源与公开边界见[贡献说明](pcb-review-contribution.md)。
+
 如果不想走 bundle（比如还没发版、想本地开发态接入），clone 后跑
 `scripts/dsh-install.sh`（幂等；自动探测仓库路径、注入/更新 `cordis.patch.yml`、
 防重复）：

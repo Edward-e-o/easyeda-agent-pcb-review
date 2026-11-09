@@ -3020,6 +3020,7 @@ external router (Freerouting) would route under the antenna. The result reports
 	}
 	// ── module-check: schema-v2 routed-module persistence/integrity gate ─────
 	pcb.AddCommand(newPcbModuleCheckCmd(stdout, stderr))
+	pcb.AddCommand(newPcbReviewDeltaCmd(stdout))
 	pcb.AddCommand(newPcbModuleOwnedCmd(stdout, stderr))
 	// ── refine: 打分驱动的精修环（默认 dry-run，按步回滚）──────────────────────
 	pcb.AddCommand(newPcbRefineCmd(cfg, &window, stdout, stderr))

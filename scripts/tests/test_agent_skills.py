@@ -19,6 +19,16 @@ installer = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(installer)
 
 
+class DshTargetTests(unittest.TestCase):
+    def test_explicit_dsh_target_respects_home_without_changing_all_targets(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            dsh_home = Path(temporary) / "DSH 用户 #50%"
+            with patch.dict(os.environ, {"DSH_HOME": str(dsh_home)}):
+                self.assertEqual(installer.target_dirs("dsh"), [dsh_home / "skills"])
+                self.assertNotIn(dsh_home / "skills", installer.target_dirs("all"))
+                self.assertFalse(dsh_home.exists())
+
+
 class AgentSkillTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="easyeda agent skills ")

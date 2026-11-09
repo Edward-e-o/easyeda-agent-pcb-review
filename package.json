@@ -6,6 +6,7 @@
   "license": "MIT",
   "main": "./index.js",
   "files": [
+    "NOTICE",
     "index.js",
     "cordis.patch.yml",
     "mcp/package.json",
@@ -13,7 +14,7 @@
     ".agents/skills/easyeda-agent/"
   ],
   "scripts": {
-    "test:dsh": "node --test scripts/tests/test_dsh_bundle.mjs scripts/tests/test_dsh_packaging.mjs"
+    "test:dsh": "node --test scripts/tests/test_dsh_bundle.mjs scripts/tests/test_dsh_packaging.mjs scripts/tests/test_dsh_setup.mjs"
   },
   "engines": {
     "node": ">=20.17.0"

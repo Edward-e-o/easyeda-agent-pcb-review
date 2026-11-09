@@ -10,6 +10,7 @@
 |---|---|---|
 | CLI 现在能否日常使用、检查是否收尾 | [CLI Status](cli-STATUS.md) | 当前可用范围、已知限制和后续跟进 |
 | 安装、连接和升级 | [quick-start.md](quick-start.md) | [dev-environment.md](dev-environment.md) |
+| Windows DSH 源码接入、复核改进与来源 | [DSH 接入](dsh-integration.md) | [贡献边界与失败模式](pcb-review-contribution.md) |
 | Codex 内置浏览器本地版本测试 | [codex-web-eda-runbook.md](codex-web-eda-runbook.md) | [原理图验收实例](reviews/2026-09-23-v1.6.0-schematic-acceptance.md) |
 | 基础 CLI 动作与真实链路测试 | [cli-live-test.md](cli-live-test.md) | [B00–B10 前置条件与步骤](cli-live-test-detail.md) |
 | 已知 CLI bug 与当前使用建议 | [cli-known-bugs.md](cli-known-bugs.md) | 影响、跟踪单、提示与暂停条件 |

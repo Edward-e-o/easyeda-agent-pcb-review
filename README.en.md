@@ -1,3 +1,73 @@
+# easyeda-agent PCB Review: community enhancements
+
+[简体中文](README.md) · [Original author: zhoushoujianwork](https://github.com/zhoushoujianwork) · [Upstream repository](https://github.com/zhoushoujianwork/easyeda-agent)
+
+**This is a community derivative of zhoushoujianwork/easyeda-agent, maintained by [Edward-e-o](https://github.com/Edward-e-o).**
+The original CLI, daemon, EDA connector, MCP server, DSH bundle/Skill support and existing teardrop tooling
+come from upstream and its contributors. These enhancements are based on upstream commit
+`69af00c0db3960757bff36a68edb286adcd64458`, developed and reviewed with assistance from Codex and DeepSeek.
+This is not an official product of EasyEDA, DeepSeek, OpenAI, or the upstream author.
+
+## Why this derivative exists
+
+Real PCB revisions exposed a gap between a clean DRC report and verified interfaces, vias, solder-mask
+geometry and final exports. Likewise, loading design instructions does not establish a working tool connection.
+This branch improves **Windows / DeepSeek Harness source-checkout setup and diagnostics**, and makes
+frequently missed board changes reviewable. Upstream already supports DSH: **we do not claim first-time
+DeepSeek support**, and we have no measured speedup or token-savings percentage to advertise.
+
+| Enhancement | Added behavior | Does not replace |
+|---|---|---|
+| Offline `pcb review-delta` | Compares components, pad nets and vias; flags retained mask fills at removed vias; reports incomplete capture | Copper connectivity, Gerbers, native DRC, or physical testing |
+| Conditional routing review | Teardrops and eight routing principles, with applicability, evidence and exceptions | Nine automatic geometry detectors or an automatic pass certificate |
+| DSH source setup without Bash | A Node helper with preview by default, backups, idempotence, guarded rollback and no PATH changes | The existing upstream DSH bundle or MCP protocol |
+| Skill discovery diagnostics | An explicit `dsh` target in the existing installer; disclosure of old or unreadable user Skill copies | Proof that a model correctly followed the instructions |
+
+## Usage and validation
+
+This is a development branch, without a formal release of these enhancements. With Go, Node 20.17+ and
+Python 3 installed, build from the checkout root:
+
+```powershell
+go build -o bin/easyeda-review.exe ./cmd/easyeda
+npm ci --ignore-scripts --no-audit --no-fund
+python scripts/install-agent-skills.py --target dsh --scope design --dry-run
+node scripts/dsh-setup.mjs --profile desktop --easyeda-bin 'C:\your-checkout\bin\easyeda-review.exe'
+```
+
+Inspect the preview, then follow [Windows DSH setup and rollback](docs/dsh-integration.md#windows-源码副本接入与回退).
+For Codex, reuse `--target codex --scope design`; existing directories are preserved and reported as
+conflicts, so back them up before an upgrade. `review-delta` is an offline CLI subcommand, not an MCP
+typed action. Its inputs are two captures produced by `pcb dump --include-copper`:
+
+```powershell
+.\bin\easyeda-review.exe pcb review-delta --before before.json --after after.json --strict
+npm run test:dsh
+go test ./internal/app -run TestPCBReviewDelta -count=1
+```
+
+`--strict` exits nonzero for changes or incomplete input while retaining the report. Changes may be
+intentional; findings never authorize automatic removal of holes or mask openings. Local validation covered
+nine targeted Go test groups, 21 DSH regression tests, the Python DSH-target test, and actual DSH Skill
+loading and MCP catalog/health calls. Read-only replay of a private board revision found eight retained-mask
+candidates before correction and none for that category afterward; private captures are not published.
+Full Go/Python suites retain Windows failures and are not reported as all passing. EDA connector and
+real design-write end-to-end acceptance remain incomplete; no physical-hardware qualification is claimed.
+See [provenance, failure patterns and contribution boundaries](docs/pcb-review-contribution.md).
+
+## Attribution and licensing
+
+[LICENSE](LICENSE) and [NOTICE](NOTICE) are retained: upstream is MIT overall; `extension/src/beautify/`
+retains the Apache-2.0 license, attribution and modification record inherited from
+[m-RNA/Easy_EDA_PCB_Beautify](https://github.com/m-RNA/Easy_EDA_PCB_Beautify).
+Published content excludes local configuration, credentials, customer chats and private PCB projects.
+Keep upstream attribution and the derivative relationship; do not describe the entire tool as our original work.
+
+---
+
+The upstream documentation is retained below. Its website, official releases and original installation links
+refer to upstream, and do not imply installation of this branch's enhancements.
+
 <p align="center">
   <img src="docs/assets/easyeda-agent-logo.png" width="96" alt="easyeda-agent logo" />
 </p>

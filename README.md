@@ -1,3 +1,65 @@
+# easyeda-agent PCB Review：社区改良版
+
+[English](README.en.md) · [原作者 zhoushoujianwork](https://github.com/zhoushoujianwork) · [上游项目](https://github.com/zhoushoujianwork/easyeda-agent)
+
+**这是基于 zhoushoujianwork/easyeda-agent 的社区衍生版本，由 [Edward-e-o](https://github.com/Edward-e-o) 维护。**
+原作者提供了 CLI、daemon、EDA 连接器、MCP、DSH bundle/Skill 和既有泪滴工具；这些能力均归属于
+上游及相应贡献者。本次在上游提交 `69af00c0db3960757bff36a68edb286adcd64458` 的基础上改良，
+借助 Codex 与 DeepSeek 协作开发、复核。不是 EasyEDA、DeepSeek、OpenAI 或上游作者的官方版本。
+
+## 为什么做这个改良
+
+PCB 实际返工中，DRC 没报错并不代表接口、过孔、阻焊和最终导出都正确；AI 能读设计说明也不代表
+工具已经接通。因此本分支重点改善 **Windows／DeepSeek Harness 的源码接入与诊断**，并把改板中
+容易漏掉的差异变成可复核输出。上游本来就支持 DSH，**本项目不宣称首次支持 DeepSeek**，也没有
+测得可公开承诺的提速或 token 节省比例。
+
+| 本次增量 | 做了什么 | 没有替代什么 |
+|---|---|---|
+| 离线 `pcb review-delta` | 对账器件、焊盘网络、过孔变化，提示删孔位置仍保留的阻焊填充；缺测明确报告 | 实际铜连通、Gerber、原生 DRC 和硬件验证 |
+| 条件化布线审查 | 加入泪滴及八项布线原则，注明适用条件、证据和例外 | 九项自动几何检测器或自动合格证明 |
+| 无 Bash 的 DSH 源码接入 | Node 助手默认预览，应用先备份，幂等、可回退，保护后续配置编辑，不改 PATH | 上游已具备的 DSH bundle／MCP 协议 |
+| Skill 发现与旧版提示 | 复用链接安装器增加显式 `dsh` 目标；报告用户根旧副本及不可读链接 | 模型已正确执行规则的证明 |
+
+## 使用与验收
+
+这是开发分支，尚无本分支的正式 Release。需要 Go、Node 20.17+、Python 3；在源码根目录构建：
+
+```powershell
+go build -o bin/easyeda-review.exe ./cmd/easyeda
+npm ci --ignore-scripts --no-audit --no-fund
+python scripts/install-agent-skills.py --target dsh --scope design --dry-run
+node scripts/dsh-setup.mjs --profile desktop --easyeda-bin 'C:\your-checkout\bin\easyeda-review.exe'
+```
+
+先检查预览，再按 [Windows DSH 接入说明](docs/dsh-integration.md#windows-源码副本接入与回退)安装。
+Codex 可复用 `--target codex --scope design`；已有目录会被保留并报冲突，更新前先备份。
+`review-delta` 是 CLI 离线命令，不是 MCP typed action；输入为两份 `pcb dump --include-copper`：
+
+```powershell
+.\bin\easyeda-review.exe pcb review-delta --before before.json --after after.json --strict
+npm run test:dsh
+go test ./internal/app -run TestPCBReviewDelta -count=1
+```
+
+`--strict` 在有变化或缺测时非零退出，仍输出报告；变化可能符合设计意图，不授权自动删孔或开窗。
+本地验证覆盖9组 Go 定向测试、21项 DSH 定向回归、Python DSH 目标用例，以及实际 DSH Skill
+读取和 MCP 目录/健康调用。真实改板存档只读复测曾检出8个旧阻焊残留候选，修正版该项为0；
+原始私有存档不入库。整仓 Go/Python 回归仍有 Windows 失败，不能称全绿。
+当前没有完成 EDA 连接器及真实设计写入的端到端验收，也没有硬件合格声明。
+详见 [增量来源、失败模式及公开边界](docs/pcb-review-contribution.md)。
+
+## 原作者、许可与归属
+
+保留 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)：上游整体 MIT；`extension/src/beautify/` 继承
+[m-RNA/Easy_EDA_PCB_Beautify](https://github.com/m-RNA/Easy_EDA_PCB_Beautify) 的 Apache-2.0
+许可、署名及变更记录。公开内容不含本机配置、凭据、客户聊天或私有 PCB 工程。请保留原作者
+署名和衍生关系，不将本次改动描述为整个工具的原创。
+
+---
+
+以下保留上游原版说明；其中官网、官方版本及原版安装链接指向上游，不代表会安装本分支增量。
+
 <p align="center">
   <img src="docs/assets/easyeda-agent-logo.png" width="96" alt="easyeda-agent logo" />
 </p>
